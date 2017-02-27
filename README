@@ -2,14 +2,13 @@
 ## A tool to graph fast and nicely the pButtons and Buttons
 
 To install:
-  - download the pButtonsWeb.zip
-  - copy the pButtonsWeb folder to any place
+  - download the installPackage.zip and unzip.
+  - copy the pButtonsWeb folder to any place.
   - open a terminal and copy and paste the following text. 
 (Of course if you don't want my path and namespace you can change it )
 
 ## Video
 See the quickdemo.mp4 video to have an idea 
-
 
 
 
