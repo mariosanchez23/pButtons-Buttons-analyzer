@@ -1,0 +1,9 @@
+To deploy
+
+Export current package and add it to classes.xml in the pButtonsWeb directory
+
+Do $System.OBJ.ExportPackage("pButtons","/tmp/classes.xml")
+!mv /tmp/classes.xml /Users/msanchez/isc/Atelier/workspace/Power\ pButtons/installPackage/pButtonsWeb/classes.xml
+
+
+Then zip the folder installPackage

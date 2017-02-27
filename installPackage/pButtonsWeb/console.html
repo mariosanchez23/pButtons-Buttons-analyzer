@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>console.log</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css" >
+	<link rel="stylesheet" href="libs/bootstrap-select/dist/css/bootstrap-select.min.css">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<div class="row">
+		<div class="well main-display-area col-md-8">
+	 			<iframe id="iframeConsole" class=' maxsize' frameborder="0" src=""></iframe>
+	
+	 	</div>
+	 	<div class="container form-inline col-md-4">
+	 			<div class="input-group col-sm-5">
+		 			<span class="input-group-addon">filter</span>
+		 			<input class="form-control col-sm-10"  id="filter" required placeholder="Add some text to filter" name="filter" type="text" />
+		 		</div>
+		 		<div class="btn-group" role="group" aria-label="...">
+					<button id="level0" type="button" class="btn btn-success">Clear Filter</button>
+					<button id="level1" type="button" class="btn btn-primary">Level 1</button>
+					<button id="level2" type="button" class="btn btn-warning">Level 2</button>
+					<button id="level3" type="button" class="btn btn-danger">Level 3</button>
+				</div>
+		 		    <span id="filteredText" class="help-block">filtered text: </span>
+		</div>
+    </div>
+    
+    
+
+	<script src="libs/jquery-3.1.0.min.js"></script>
+	<script src="libs/bootstrap/js/bootstrap.min.js"></script>
+	<script src="libs/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="js/general.js"></script>
+    <script src="js/console.js"></script>
+    
+	<script>
+	// prepare the filter input box to start filtering when the user waits at least 1 second
+
+	$(function() {
+		
+		// wait for a second before aplying filter
+		$('#filter').keyup(function() {
+		  delay(function(){
+		    loadFilter();
+		  }, 1000 );
+		});
+
+		$("#level0").click( function(){
+             loadFilterWithLevel(0);
+        });
+        $("#level1").click( function(){
+             loadFilterWithLevel(1);
+        });
+        $("#level2").click( function(){
+             loadFilterWithLevel(2);
+        });
+        $("#level3").click( function(){
+             loadFilterWithLevel(3);
+        });
+
+		$('#iframeConsole').on('load',function() {
+		  prepareConsole();
+		});
+
+      });
+	
+
+
+	</script>
+	
+	
+</body>
+</html>

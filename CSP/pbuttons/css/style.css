@@ -1,0 +1,30 @@
+body{
+    padding: 15px;    
+}
+
+.pre-scrollable {
+                max-height: 700px;
+            }
+.maxsize{
+	height: 700px;
+	width: 100%;
+}
+
+#chartdiv {
+    width       : 100%;
+    height      : 500px;
+    font-size   : 11px;
+}                   
+
+.dropdown-menu {
+  opacity: 0.9;
+  }
+
+.dinamicBtn{
+   margin-right: 4px;
+}
+
+
+body,html,.main-display-area {
+   height:98%;
+}
