@@ -88,7 +88,6 @@ ClassMethod uploadFile() As %Status
 			set f=##class(%Stream.FileBinary).%New()
 			do f.LinkToFile(uploadedFile)
 			s sc=f.CopyFromAndSave(file)
-			
 			set sc=##class(pButtons.Utilities).unzipFile(.uploadedFile)
 			set sc=##class(pButtons.Utilities).checkFileType(.uploadedFile)
 			set previewHTML=##class(pButtons.Utilities).parseHTML(uploadedFile)

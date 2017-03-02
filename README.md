@@ -24,6 +24,7 @@ Set PropertiesApi("NameSpace")=namespace
 do ##class(Security.Applications).Create("/api/pButtons",.PropertiesApi)
 Set Properties("Path")=path
 Set Properties("NameSpace")=namespace
+Set Properties("MatchRoles")=":%Developer"
 do ##class(Security.Applications).Create("/pButtons",.Properties)
 
 zn namespace

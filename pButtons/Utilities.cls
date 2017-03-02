@@ -323,13 +323,12 @@ ClassMethod writeButtonsSectionsToFile(data As %Stream.FileCharacter,directory)
 
 ClassMethod unzipFile(byRef pFile) as %Status
 {
-	s noZipFile=$P(pFile,".ZIP",1)
-	
-	if ($LENGTH(noZipFile)<$LENGTH(pFile)){ //This is a zip file
+	s noZipFile=$P(pFile,".ZIP",1) // Get the part without the .ZIP extention
+	if ($LENGTH(noZipFile)<$LENGTH(pFile)) { //This is a zip file
 		set cmd="unzip -o "_pFile_" -d "_##class(%File).GetDirectory(pFile)
 		set sc=$ZF(-1,cmd)
 		s pFile = noZipFile
-		quit sc
+		quit 'sc // If ZF(-1) is ok it returns 0 (not 1)
 	}
 	quit $$$OK
 }
