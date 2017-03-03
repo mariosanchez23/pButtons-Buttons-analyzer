@@ -32,3 +32,7 @@ Set ^PowerpButtons("UploadDirectory")=path_"uploaded/"
 w !,"Import the class: "_path_"/classes.xml",!
 do $SYSTEM.OBJ.Load(path_"classes.xml","ck")
 ```
+
+###Notes: 
+In Linux you may need to give permissions to the "uploaded" folder to be able to upload files. 
+(just a simple chmod 777 to the folder will do the trick)
