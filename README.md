@@ -19,7 +19,7 @@ set path="/Users/msanchez/isc/pButtonsWeb/"
 set namespace="USER"
 w !,"Create the Web Applications",!
 zn "%SYS"
-Set PropertiesApi("DispatchClass")="pButtons.Server"`
+Set PropertiesApi("DispatchClass")="pButtons.Server"
 Set PropertiesApi("NameSpace")=namespace
 do ##class(Security.Applications).Create("/api/pButtons",.PropertiesApi)
 Set Properties("Path")=path

@@ -1,5 +1,7 @@
 To deploy
 
+1) Copy files changed to installPackage
+2) 
 Export current package and add it to classes.xml in the pButtonsWeb directory
 
 Do $System.OBJ.ExportPackage("pButtons","/tmp/classes.xml")

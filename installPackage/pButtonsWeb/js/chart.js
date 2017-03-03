@@ -3,7 +3,6 @@ var chartType = urlParam("type");
 var titlesToGraph = urlParam("titlesToGraph");
 
 var chartDataDateFormat = "";
-
 // this variables will let me control if we want to zoom or not when adding/removing graphs
 var allowZoom=true,zoomStartDate,zoomEndDate;
 
@@ -113,15 +112,17 @@ function syncZoom(event) {
 // populate the select box with data columns
 function populateSelectValues() {
   var selectBox = $("#selectPicker");
+  var optionString="<optgroup label='"+chartType+"'>";
   $.each(chartData[0], function(k){
     if (k!='dateTime'){
-        selectBox.append("<option>"+k+"</option>"); 
-        // calling asynchrounsly to populate the axis with titles. 
-        // this is done to do a faster render when the graph is added. 
-        // setTimeout(function() { addAxisToChart(k) },5000);
-        // removed to allow initial speed. Left here for reference
+    	optionString += "<option>"+k+"</option>";
+    }else {
+    	optionString+="</optgroup><optgroup label='OS METRICS'>";
+    	// This is only needed when mixing 
     }
   });
+  optionString += "</optgroup>";
+  selectBox.append(optionString);
   selectBox.selectpicker('refresh');
 }
 
@@ -175,7 +176,6 @@ function addGraphs(titles) {
 }
 
 
-
 function addGraphPlusAxisToChart(title) {
 	  // check if the the axis exists
 	
@@ -188,7 +188,6 @@ function addAxisToChart(title) {
 	  var axisArray = $.grep(chart.valueAxes, function(e){ return e.id == title; })
 	  if (axisArray.length == 0) {
 		  // not found, so add it
-		  var position = chart.valueAxes.length ==1 ? "left" : "right";
 		  var color =  chart.colors[chart.valueAxes.length];
 		  var t0 = performance.now();
 		  var a = new AmCharts.ValueAxis();
@@ -197,9 +196,15 @@ function addAxisToChart(title) {
 			  a.axisThickness = 2;
 			  a.gridAlpha = 0;
 			  a.axisAlpha = 1;
-			  a.minimum = 0;
-			  a.position = position;
-			  a.autoOffset = true;
+			  a.minimum = 0;	  
+		  if (checkIfTitleIsCPUKind(title)) {
+		  	a.maximum = 100;
+		  	a.autoOffset = false;
+		  	a.position = "left";
+		  } else {
+		  		a.autoOffset = true;
+		  		a.position = "right";
+		  }
 		  chart.addValueAxis(a);
 		  var t1 = performance.now();console.log("Call to addAxis "+ title + " took " + (t1 - t0) + " milliseconds.");
 
@@ -216,6 +221,16 @@ function addAxisToChart(title) {
 	  return a;
 }
 
+// Check if title is a CPU type to not add new axis and set the max value to 100
+// this helps with the visualitation
+function checkIfTitleIsCPUKind(title) {
+	if (title.includes("Processor") || title.includes("%util") || title.includes("await")) {
+		return true;
+	}else {
+		if (title=="us" || title=="sy" ||title=="wa" ||title=="id" || title=="st") { return true }
+	}
+	return false;
+}
 
 function addGraphToChart(a) {
 	  var title= a.id;
@@ -321,8 +336,20 @@ function loadChartData(type) {
     case 'perfmon':
       return parsePerfmon(dataFile);
       break;
-    case 'mix':
-      return parseMgstatPerfmon(dataFile);
+   case 'sard':
+      return loadSarData();
+      break;
+    case 'mgstatPerfmon':
+    	mgstatData = parseMgstat(pButtonsFile+".sections/mgstat.txt");
+    	perfmonData = parsePerfmon(pButtonsFile+".sections/perfmon.txt");
+    	for ( var i = 0; i < mgstatData.length; i++ ) {$.extend(mgstatData[i], perfmonData[i]);}
+    	return mgstatData;
+      break;
+    case 'mgstatVmstat':
+    	mgstatData = parseMgstat(pButtonsFile+".sections/mgstat.txt");
+    	vmstatData = parseVmstat(pButtonsFile+".sections/vmstat.txt");
+    	for ( var i = 0; i < mgstatData.length; i++ ) {$.extend(mgstatData[i], vmstatData[i]);}
+    	return mgstatData;
       break;
     default:
       break;
@@ -352,8 +379,7 @@ function parseVmstat(dataFile) {
 }
 
 function parsePerfmon(dataFile) {
-	
-  console.log(dataFile);
+  //console.log(dataFile);
   var rawFile = getDatafromFile(dataFile);
  
   var t0 = performance.now();
@@ -379,20 +405,13 @@ function parsePerfmon(dataFile) {
 }
 
 function parseMgstat(dataFile) {
-	 var t0 = performance.now();  
+	var t0 = performance.now();  
   var rawFile = getDatafromFile(dataFile);
-  // remove first lines from the mgstat file
-  rawFile = rawFile.substring(rawFile.indexOf("\n")+1);
-  rawFile = rawFile.substring(rawFile.indexOf("\n")+1);
+  // go to the column file starting with Date in the mgstat file
+  rawFile = rawFile.substring(rawFile.indexOf("Date"));
   var chartData = AmCharts.parseCSV( rawFile, {"useColumnNames": true } );
   // remove last lines to avoid undefined (garbage in mgstat)
-  chartData.pop();
-  chartData.pop();
-  chartData.pop();
-  chartData.pop();
-  
-
-  
+  chartData.pop();  chartData.pop();  chartData.pop();  chartData.pop(); 
   // set DateTime as data column
   for ( var i = 0; i < chartData.length; i++ ) {
     //chartData[i]["dateTime"]=chartData[i].Date + chartData[i].Time;
@@ -407,15 +426,51 @@ function parseMgstat(dataFile) {
   return chartData
 }
 
-function parseMgstatPerfmon() {
-  mgstatData = parseMgstat();
-  perfmonData = parsePerfmon();
-  for ( var i = 0; i < mgstatData.length; i++ ) {
-   $.extend(mgstatData[i], perfmonData[i]);
-  }
-  return mgstatData;
+//
+// PARSE SARD DATA FUNCTIONS
+//
+function loadSarData(){
+	var url =  pButtonsFile + ".sections/sard/devices.txt";
+	// I need to use the async call to get return the data
+	var devicesArray;
+	$.ajax({
+	     async: false,
+	     type: 'GET',
+	     url: url,
+	     success: function(data) {
+	         devicesArray = data.split(',');
+	     }
+	});
+
+	deviceDataFinal = parseSard( pButtonsFile+".sections/sard/" +devicesArray[1]+".txt");	
+	for(var i = 2; i < devicesArray.length-1; i++){
+		deviceData = parseSard( pButtonsFile+".sections/sard/" +devicesArray[i]+".txt");
+		for ( var j = 0; j < deviceDataFinal.length; j++ ) {$.extend(deviceDataFinal[j], deviceData[j]);}
+	}
+	return deviceDataFinal;
+	
 }
 
+function parseSard(dataFile) {
+  
+  var t0 = performance.now();  
+  var rawFile = getDatafromFile(dataFile);
+  var chartData = AmCharts.parseCSV( rawFile, {"useColumnNames": true } );
+  chartData.pop();
+  chartData.pop();
+  
+  chartDataDateFormat = "MM/DD/YY JJ:NN:SS";
+  var t1 = performance.now();
+  console.log("Call to parseSardData took " + (t1 - t0) + " milliseconds.");
+ 
+  return chartData
+}
+
+//
+//											END PARSING
+//
+
+// 
 // Legend listener to highlight graphs functions
 //
 function highlightGraph(graph) {

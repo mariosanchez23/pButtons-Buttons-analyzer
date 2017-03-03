@@ -153,7 +153,7 @@ ClassMethod parseSard(filename)
 	try {
 		Set stream=##class(%Stream.FileCharacter).%New()
 		$$$THROWONERROR(tSC, stream.LinkToFile(filename))
-		set directory=filename_".sard"
+		set directory=$REPLACE(filename,".txt","")
 		set sc=##class(%File).CreateDirectory(directory)
 		
 		if sc {
@@ -176,24 +176,32 @@ ClassMethod writeDevicesToFile(data As %Stream.FileCharacter,directory)
 	// Linux 2.6.32-131.0.15.el6.x86_64 (c0lx0009.sacyl.es) 	11/11/16 	_x86_64_	(24 CPU)
 	// 11:24:00          DEV       tps  rd_sec/s  wr_sec/s  avgrq-sz  avgqu-sz     await     svctm     %util
 	// 11:24:10     dev65-64      3,50      0,00    110,51     31,54      
-	
 	set sc = data.MoveTo(1)
-	do data.ReadLine()
-	do data.ReadLine() // Jump one line
+	do data.ReadLine()  // jump empty line
+	set dateCapture=$PIECE(data.ReadLine(),$C(9),2)  // Get the date from the first line
 	set headerLine = data.ReadLine()	
+	set headerLine = $REPLACE($ZSTRIP(headerLine,"=W")," ",",") // change spaces for ,
+	set headerLine = "dateTime,"_$PIECE(headerLine,",",2,*)  // Add a valid name for time column 
+	 
 	// loop through file searching for device Names and creating the empty files
 	// It is better to loop twice to create the files first than checking for file creation every time
 	s deviceName="",deviceList=""
 	while ('data.AtEnd){	
 		set sectionLine = data.ReadLine()
+		//change the decimal format to . instead of ,
+		// change spaces for ,
+		set sectionLine=$REPLACE($ZSTRIP($REPLACE(sectionLine,",","."),"=W")," ",",")
+		set oldTime=$P(sectionLine,",",1)  // get time
+		set sectionLine=dateCapture_sectionLine
+			
 		// Example
 		// 11:24:10     dev65-64      3,50      0,00    110,51     31,54      
-		s deviceName=$PIECE($ZSTRIP(sectionLine,"=W")," ",2)
+		s deviceName=$PIECE(sectionLine,",",2)
 		if (deviceName'="DEV") {
 			set fileName = ##class(%File).NormalizeFilename(deviceName_".txt",directory)
 			set fileStream(deviceName) = ##class(%Stream.FileCharacter).%New()
 			set fileStream(deviceName).Filename=fileName
-			do fileStream(deviceName).WriteLine(headerLine)
+			do fileStream(deviceName).WriteLine($REPLACE(headerLine,",",",("_deviceName_") "))
 			do fileStream(deviceName).WriteLine(sectionLine)
 			set deviceList=deviceList_","_deviceName
 		
@@ -202,7 +210,7 @@ ClassMethod writeDevicesToFile(data As %Stream.FileCharacter,directory)
 			set fileName = ##class(%File).NormalizeFilename("devices.txt",directory)
 			set fileStreamDevices = ##class(%Stream.FileCharacter).%New()
 			set fileStreamDevices.Filename=fileName
-			do fileStreamDevices.WriteLine(deviceList)
+			do fileStreamDevices.WriteLine(deviceList_",")
 			do fileStreamDevices.%Save()
 			quit
 		}
@@ -213,7 +221,24 @@ ClassMethod writeDevicesToFile(data As %Stream.FileCharacter,directory)
 		set sectionLine = data.ReadLine()
 		s deviceName=$PIECE($ZSTRIP(sectionLine,"=W")," ",2)
 		if (deviceName'="DEV") {
-			do fileStream(deviceName).WriteLine(sectionLine)
+			//change the decimal format to . instead of ,
+			// change spaces for ,
+			set sectionLine=$REPLACE($ZSTRIP($REPLACE(sectionLine,",","."),"=W")," ",",")
+			set newTime=$P(sectionLine,",",1)  // get time
+			
+			// if we have a day change, I need to increment dateCapture
+			try {
+				if ($ZTH(newTime)<$ZTH(oldTime)){
+					set dateCapture=$ZD($ZDH(dateCapture,1)+1,1)_" "  //we need to add an extra space
+				}
+				set oldTime=newTime
+			 
+				// add date to graph easily
+				set sectionLine=dateCapture_sectionLine
+				do fileStream(deviceName).WriteLine(sectionLine)	
+			 }catch{ 
+			 	// do nothing, simply we can't parse the date and we don't want the line
+			 }
 		}
 	}
 	
