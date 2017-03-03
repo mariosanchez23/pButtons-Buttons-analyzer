@@ -34,5 +34,11 @@ do $SYSTEM.OBJ.Load(path_"classes.xml","ck")
 ```
 
 ###Notes: 
-In Linux you may need to give permissions to the "uploaded" folder to be able to upload files. 
+ In Linux/mac you may need to give permissions to the "uploaded" folder to be able to upload files. 
 (just a simple chmod 777 to the folder will do the trick)
+
+Any ideas are welcome!
+
+###Bugs: 
+ I developed it and tested mainly with safari. 
+ There are some rendering bugs on chrome/firefox where you may need to zoom the graphs to be able to see it correctly.  
