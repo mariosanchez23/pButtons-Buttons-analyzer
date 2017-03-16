@@ -582,7 +582,7 @@ function populateButtonsMenu(){
 
 function newWindowWithGraphs(graphNewWindows){
 	for (i = 0; i < graphNewWindows.length; i++) {
-	    var a = window.open(this.location.href+'&titlesToGraph='+graphNewWindows[i],'_blank','width=1200,height=450');
+	    var a = window.open(this.location.href+'&titlesToGraph='+graphNewWindows[i],'_blank','width=1200,height=650');
 	 }
 	
 }

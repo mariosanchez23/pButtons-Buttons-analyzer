@@ -1,0 +1,13 @@
+To install:
+ - download the installPackage.zip and unzip.
+ - copy the pButtons folder to any place: <yourPath>
+ - make sure that the folder <yourPath>/uploaded has write permissions for cacheusr
+ - Open terminal, import the classes and execute:
+
+ 	do $SYSTEM.OBJ.Load(<path/classes.xml>,"ck")
+	do ##class(pButtons.Utilities).Setup(<yourPath>)
+	
+ Example: 
+
+do $SYSTEM.OBJ.Load("tmp/classes.xml","ck")
+do ##class(pButtons.Utilities).Setup("/Users/msanchez/isc/pButtons/")

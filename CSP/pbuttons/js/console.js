@@ -11,15 +11,30 @@ var lines=[];
 //array with the htmlFilter content. It is used to filter
 var filterLines=[];
 
-// start loading the cconsole.log
-loadConsoleIframe();
+$(document).ready(function(){
+	// start loading the cconsole.log
+	loadConsoleIframe();
+});
 
 function loadConsoleIframe(){
 	var cconsoleFile =  urlParam("file");
 	// load the iframe
 	$("#iframeConsole").attr('src',cconsoleFile);
-	document.title = 'LOG '+urlParam("file");
+	document.title = 'LOG '+cconsoleFile;
+	loadVersion();
 }
+
+// load version from general.txt section
+var ZV=null;
+function loadVersion(){
+	var url =  urlParam("file") + "/../general.txt";
+	$.get(url, function(data) {
+		var start=data.indexOf("Version String:")+16;
+		var end = data.indexOf("\n",start);
+		ZV = data.substring(start,end);
+	});
+}
+
 
 function prepareConsole(){
 	// get contents from iFrame
@@ -27,13 +42,16 @@ function prepareConsole(){
 	html = $("#iframeConsole").contents().find("body pre").text();
 	parseConsole();
 	$("#iframeConsole").contents().find("body pre").html(html);
+	
 	return true;
 }
 
 // filter the cconsole.log 
 function loadFilter(){
 	var filterHtml = filterConsole($("#filter").val());
+	$("#iframeConsole").contents().find("body pre").empty(); // this avoids memory leaks
 	$("#iframeConsole").contents().find("body pre").html(filterHtml);
+	enableLines();
 	return true;
 }
 
@@ -57,7 +75,9 @@ function loadFilterWithLevel(severity){
 		return true;
 	}
 	var filterHtml = filterConsole(filter);
+	$("#iframeConsole").contents().find("body pre").empty(); // this avoids memory leaks
 	$("#iframeConsole").contents().find("body pre").html(filterHtml);
+	enableLines();
 	return true;
 }
 
@@ -81,9 +101,31 @@ function filterConsole(string) {
 	return newLines.join("\n");	
 }
 
-// function copied from WRC+
-
+// prepare the object for future parsing and filters
 function parseConsole() {
+	if (urlParam("file").includes("cconsole")){
+		// if the file is cconsole.log we parse it. If not we don't so it is quicker. 
+		$("#levelButtons").show();
+		parseCconsole();
+		return ;
+
+	}else if(urlParam("file").includes("syslog")) {
+		// hide Level buttons when we don't see a cconsole.log file
+		parseSYSLOG();	
+	}else if(urlParam("file").includes("cpf")) {
+		// hide Level buttons when we don't see a cconsole.log file
+		parseCPF();
+	}
+	lines = html.trim().split(/[\n]/);
+	filterLines=lines;
+	
+}
+
+
+
+// function copied from WRC+
+// this functions parses the file as cconsole.log (colors,etc...)
+function parseCconsole() {
 	var isCconsole = false;
 	var spaceCounter = 0;
 	var divCounter = 0;
@@ -91,6 +133,7 @@ function parseConsole() {
 	
 	
 	// MSM: move lines to global variable to speed filterConsole
+	// var lines = html.trim().split(/[\n]/);
 	lines = html.trim().split(/[\n]/);
 	for(var ii = 1; ii < lines.length - 1; ii++) {
 		var line = lines[ii];
@@ -109,7 +152,8 @@ function parseConsole() {
 			var parts = line.trim().split(/\s/g); 
 			
 			//create the html for the components
-			var date = '<span style="color: #333;">' + parts[0] + "</span>";
+			//MSM: add line number to be able to scroll
+			var date = '<span name="line" id="line'+ii+'" style="color: blue;"> ' + parts[0] + " </span>";
 			var pid = '<span style="color: #999;">' + parts[1] + "</span>";
 			var severity = parts[2]; 
 			
@@ -166,10 +210,6 @@ function parseConsole() {
 		if(forwardIndex === 0) {
 			line = line.replace("&gt;", "<span style='color: #666; border-left: 3px solid #666; margin-left: 10px; padding-left: 10px'>&gt;") + "</span>";
 		}
-		
-	
-		
-		
 		//save the modified line in the array
 		lines[ii] = line;
 	}
@@ -181,10 +221,66 @@ function parseConsole() {
 		html = html + "</div>"
 	}
 	
+	// MSM
 	// lines and filtered lines are the same after loading
 	filterLines=lines;
 	
 }
+
+// COPIED FROM WRC+ Thanks!
+
+function parseSYSLOG(){
+	// modify regex to add - syslog error numbers
+	html = html.replace(/-*\d+\s+\d+\s+\d+\/\d+\/\d+\s+\d+:\d+:\d+(?:AM|PM)\s+\d+\s+\d+/g, function(m) {
+		if(m.length > 1) {
+			//try to get the version from the $ZV
+			// MSM: changed variables to load the ZV from the page
+			var version = "latest";
+				if(ZV != "") {
+				var versionMatch = ZV.match(/\d{4}\.\d\.\d/);
+				if(versionMatch != null && versionMatch.length > 0) {
+					version = versionMatch[0];
+				}
+			}
+			
+			//split the SYSLOG string into parts by whitespace
+			var parts = m.split(/\s+/g);
+			
+			//check for the right number of parts
+			if(parts.length >= 6) {
+				var error= parts[0];
+				var mod = parts[4];
+				var line = parts[5];
+				
+				if (ZV.includes("Windows")){
+					errText=windowsDict[error];
+				}else{
+					errText=linuxDict[error];
+				}
+				var errorHtml="<a href='#' style='color: green' title='"+errText+"'>"+error+"</a>  ";
+				var regexError=new RegExp(error+"\\s+", "g");
+
+				var regexError=new RegExp(error+"\\s+", "g");
+				mtemp=m.replace(regexError, function(inner) {
+					return errorHtml;
+				});
+				
+				
+				//build the SYSLOG lookup URL
+				var href = "https://wrcplus.iscinternal.com/tools/ModLine.csp?mod="+mod+"&line="+line+"&version="+version;						
+				var regex = new RegExp(mod+"\\s+"+line, "g");
+				return mtemp.replace(regex, function(inner) {
+					return '<a href="' + href + '" style="color: orange ' 
+					+  '" target="_blank" title="SYSLOG Module Lookup">' 
+					+ inner + '</a>';
+				});
+			}
+		}
+		return m;
+	});
+
+}
+
 
 
 // functions copied from SMP
@@ -277,6 +373,41 @@ function doHighlight(bodyText, searchTerm, highlightStartTag, highlightEndTag)
   return newText;
 }
 
+/// Funcitons to scroll 
+
+function scrollEndOfPage(){
+	//$("#iframeConsole").contents().scrollTop($("#iframeConsole").contents().height());
+	$("#iframeConsole").contents().find('body').animate({scrollTop:$("#iframeConsole").contents().height()}, '500', 'swing');
+	
+}
+function scrollTopOfPage(){
+	//$("#iframeConsole").contents().scrollTop(0);
+	$("#iframeConsole").contents().find('body').animate({scrollTop:0}, '5005', 'swing');
+}
+
+function enableLines(){
+	$("span[name='line']",$("#iframeConsole").contents()).click(function() {
+		var toThisBefore=$("#"+this.id,$("#iframeConsole").contents()).offset().top;
+		var toThisBeforeScroll=$("#iframeConsole").contents().scrollTop();
+		var toThisVariation=toThisBefore-toThisBeforeScroll;
+		
+		loadFilterWithLevel(0);// clear filter to show all lines
+		$("#"+this.id,$("#iframeConsole").contents()).css("background-color", "yellow");
+		
+		var toThis=$("#"+this.id,$("#iframeConsole").contents()).offset().top;
+		
+		//$("#iframeConsole").contents().find('body').animate({scrollTop:toThis-toThisVariation}, '500', 'swing');
+		$("#iframeConsole").contents().scrollTop(toThis-toThisVariation);
+		});
+	$("span[name='line']",$("#iframeConsole").contents()).hover(
+		function() {
+			$( this ).css("background-color", "yellow");
+		}, function() {
+			$( this ).css("background-color", "#f5f5f5");
+		}
+		);
+}	
+
 
 
 //------------------------------------------------------------------------------------------------------------
@@ -298,7 +429,10 @@ this.CreateCPFRegex = function() {
 		}
 		cpf += key;
 	}
-	cpf += ')(?:\b|\s)?(?=(?:[^"]|"[^"]*")*$)';
+	// MSM the regex could fail if there are "
+	//cpf += ')(?:\b|\s)?(?=(?:[^"]|"[^"]*")*$)';
+	cpf += ')(?:\b|\s)?(?=(?:[^"]|"[^"]*)*$)';
+
 	
 	//create the actual regex
 	this.CPFRegex = new RegExp(cpf, "g");
@@ -313,13 +447,11 @@ this.CreateCPFRegex();
 //add links to CPF Reference
 //------------------------------------------------------------------------------------------
 
-// This does not work in SAFARI because the CPFRefex expression is very large. 
 function parseCPF(){
 	var version="latest";
-	console.log(this.CPFRegex);
 	html = html.replace(this.CPFRegex, function(m) {
 		//replace all references to the CPF tag with a link to the documentation
 		return '<a href="http://docs.intersystems.com/' + version + '/csp/docbook/DocBook.UI.Page.cls?KEY=' + this.CPFArray[m] + '" style="color:"green" target="_blank">' + m + '</a>';
 	});
-	$("#iframeConsole").contents().find("body pre").html(html)
+	
 }

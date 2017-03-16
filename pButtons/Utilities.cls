@@ -129,7 +129,7 @@ ClassMethod writepButtonsSectionsToFile(data As %Stream.FileCharacter,directory)
 			job ..parseSard(fileName)
 		}
 		
-		set listSections=listSections_","_section
+		set listSections=listSections_","_section_"#"_fileStream.SizeGet()
 		// Write some output with progress
 		//set procesed = $NORMALIZE(startSearch*100/data.Size,2)
 		//set ^pButtonsUpload(fileName,listSections)="Section "_ section_" exported. Procesed: "_ procesed _"%"
@@ -356,6 +356,63 @@ ClassMethod unzipFile(byRef pFile) as %Status
 		quit 'sc // If ZF(-1) is ok it returns 0 (not 1)
 	}
 	quit $$$OK
+}
+
+// install and prepare the web applications
+ClassMethod Setup(path)
+{
+	if ($G(path)=""){
+		w !,"<You need to enter the path>",!
+		w !,"To install:"
+		w !," - download the installPackage.zip and unzip."
+		w !," - copy the pButtons folder to any place: <yourPath>"
+		w !," - make sure that the folder <yourPath>/uploaded has write permissions for cacheusr"
+		w !," - Run: "
+		w !,"do ##class(pButtons.Utilities).Setup(<yourPath>)",!
+		w !," Example: "
+		w !,"do ##class(pButtons.Utilities).Setup(""/Users/msanchez/isc/pButtonsWeb/"")",!
+		
+		quit
+	}
+	
+	w !,"Setting the uploaded path to "
+	Set ^PowerpButtons("UploadDirectory")=path_"uploaded/"
+	w !,^PowerpButtons("UploadDirectory")
+	w !,"You can find all the files you upload there",!
+	
+	w !,"Setting the required Web Applications..."
+	set namespace=$namespace
+	new $Namespace
+	set $Namespace = "%SYS"
+	
+	Set PropertiesApi("DispatchClass")="pButtons.Server"
+	Set PropertiesApi("NameSpace")=namespace
+	if (##class(Security.Applications).Exists("/api/pButtons")){
+		w !,"Application /api/pButtons exists. Setting properties"
+		do ##class(Security.Applications).Modify("/api/pButtons",.PropertiesApi)
+	}else{
+		w !,"Creating web application /api/pButtons"
+		do ##class(Security.Applications).Create("/api/pButtons",.PropertiesApi)
+	}
+	
+	Set Properties("Path")=path
+	Set Properties("NameSpace")=namespace
+	Set Properties("MatchRoles")=":%Developer"
+		if (##class(Security.Applications).Exists("/pButtons")){
+		w !,"Application /pButtons exists. Setting properties"
+		do ##class(Security.Applications).Modify("/pButtons",.Properties)
+	}else{
+		w !,"Creating web application pButtons"
+		do ##class(Security.Applications).Create("/pButtons",.Properties)
+	}
+	
+	s Status=##Class(Config.Startup).Get(.Properties)
+	s port=Properties("WebServerPort")
+	s serverName=$ZU(54,0)
+	w !,"Applications set. Now you can go to this url and enjoy: ",!
+	w !," http://"_serverName_":"_port_"/pButtons/pButtonsLoader.html",!
+	
+	quit
 }
 
 
