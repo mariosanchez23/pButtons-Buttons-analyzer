@@ -42,12 +42,12 @@ All the display and graph parse and display has been done with HTML,CCS and Java
 #### Graphing: 
     Amchart library (it's super powerful!)
 
-## Installation steps 
+# Installation 
 
 To install:
 - download the installPackage.zip and unzip.
-- copy the pButtons folder to any place: <yourPath>
-- make sure that the folder <yourPath>/uploaded has write permissions for cacheusr
+- copy the pButtons folder to any place: ```<yourPath>```
+- make sure that the folder ```<yourPath>```/uploaded has write permissions for cacheusr
 - Open terminal, import the classes and execute:
 
 ```
