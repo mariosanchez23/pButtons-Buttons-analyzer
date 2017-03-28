@@ -1,6 +1,6 @@
-#pButtons & Buttons parser (graphing nicely pButtons files)
+# pButtons & Buttons parser (graphing nicely pButtons files)
 
-##What is it? 
+## What is it? 
 It is a parser for pButtons and Buttons files. PButtons&Buttons are html files that can be hard to open and work on a browser. 
 PButtons usually require external graphing tools (like excel or mgsview). With this parser they will be graphed automatically. 
 
@@ -42,7 +42,7 @@ All the display and graph parse and display has been done with HTML,CCS and Java
 #### Graphing: 
     Amchart library (it's super powerful!)
 
-##Installation steps 
+## Installation steps 
 
 To install:
 - download the installPackage.zip and unzip.
