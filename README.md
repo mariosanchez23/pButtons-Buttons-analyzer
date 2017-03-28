@@ -5,7 +5,7 @@ It is a parser for pButtons and Buttons files. PButtons&Buttons are html files t
 PButtons usually require external graphing tools (like excel or mgsview). With this parser they will be graphed automatically. 
 
 ## Main Features
-* Grahp nicely pButtons data: mgstat, perfmon, vmstat and sard!
+* Graph nicely pButtons data: mgstat, perfmon, vmstat and sard!
 * Enhanced graphs with possibility to annotate, add text, shapes, lines. Download graphs and data.
 * Upload and manage files easily (including drag&drop and several files at once)
 * Display sections in tabs
