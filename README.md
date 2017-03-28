@@ -27,19 +27,19 @@ The tool is written using HTML, Javascript and Caché Objectscript.
 
 ### Uploading & Directories 
  This managerment is done mainly in Caché. 
-####pbuttons.server and pbuttons.utilities (Rest API)
+#### pbuttons.server and pbuttons.utilities (Rest API)
 * Unzip (only OSX from now) 
 * Split html in sections
 * Do some minimal parse (example sard)
 
-###Display
+### Display
 All the display and graph parse and display has been done with HTML,CCS and Javascript.
-####Logic:
+#### Logic:
     Simple (and sometimes obscure :-) JavaScript with JQuery
     Used some libraries (for select box and upload)
-####Style:
+#### Style:
     CCS bootstrap 
-####Graphing: 
+#### Graphing: 
     Amchart library (it's super powerful!)
 
 ##Installation steps 
@@ -66,12 +66,12 @@ do ##class(pButtons.Utilities).Setup("/Users/msanchez/isc/pButtons/")
 See the quickdemo.mp4 video to have an idea 
 
 
-###Notes: 
+### Notes: 
  In Linux/mac you may need to give permissions to the "uploaded" folder to be able to upload files. 
 (just a simple chmod 777 to the folder will do the trick)
 
 Any ideas are welcome!
 
-###Bugs: 
+### Bugs: 
  Developed and tested mainly with safari, so I would expect more bugs on Chrome / Firefox.  
  
